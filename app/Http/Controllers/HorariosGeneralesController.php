@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Horariogeneral;
+use App\Puerta;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Invitado;
@@ -45,14 +46,21 @@ class HorariosGeneralesController extends Controller
     {
         $puertasNormales = DB::table('Puertas')
                                 ->select('id','nombre','estatus_en_horario_general')
-                                ->where('puerta_especial',0)->get();
+                                ->where('puerta_especial',0)
+                                ->get();
         $puertasEspeciales = DB::table('Puertas')
                                 ->select('id','nombre','estatus_en_horario_general')
-                                ->where('puerta_especial',1)->get();
+                                ->where('puerta_especial',1)
+                                ->get();
 
-        $intervalosHorarioGeneral = Horariogeneral::all();
+        $intervalosHorarioGeneral = DB::table('HorariosGenerales')->orderBy('desde', 'desc')->get();
 
-        return view('horarios_generales.index',['puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneral'=>$intervalosHorarioGeneral]);
+        $intervalosHorarioGeneralAgrupados = DB::table('HorariosGenerales')->select('desde','hasta',DB::raw('count(*) as total'))->groupBy('desde','hasta')->get();
+
+        foreach ($intervalosHorarioGeneralAgrupados as $intervaloHorarioGeneralAgrupado){
+            $intervaloHorarioGeneralAgrupado->dias = DB::table('HorariosGenerales')->select('id','dia')->where('desde',$intervaloHorarioGeneralAgrupado->desde)->get();
+        }
+        return view('horarios_generales.index',['puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneralAgrupados'=>$intervalosHorarioGeneralAgrupados]);
     }
 
 
@@ -73,8 +81,15 @@ class HorariosGeneralesController extends Controller
         $puertasEspeciales = DB::table('Puertas')
                                 ->select('id','nombre','estatus_en_horario_general')
                                 ->where('puerta_especial',1)->get();
-        $intervalosHorarioGeneral = Horariogeneral::all();
-        return view('horarios_generales.show',['puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneral'=>$intervalosHorarioGeneral]);
+        $intervalosHorarioGeneralAgrupados = DB::table('HorariosGenerales')->select('desde','hasta',DB::raw('count(*) as total'))->groupBy('desde','hasta')->get();
+
+        foreach ($intervalosHorarioGeneralAgrupados as $intervaloHorarioGeneralAgrupado){
+            $intervaloHorarioGeneralAgrupado->dias = DB::table('HorariosGenerales')->select('dia')->where('desde',$intervaloHorarioGeneralAgrupado->desde)->get();
+        }
+
+
+
+        return view('horarios_generales.show',['puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneralAgrupados'=>$intervalosHorarioGeneralAgrupados]);
 
     }
 
@@ -152,13 +167,11 @@ class HorariosGeneralesController extends Controller
                         }
                     }
 
-                    DB::table('HorariosGenerales')->insert(
-                        [
+                   Horariogeneral::create([
                             'desde'=> $request->desde_hora.":".$request->desde_minuto.":0",
                             'hasta'=> $request->hasta_hora.":".$request->hasta_minuto.":0",
                             'dia'=> $request->$i,
-                        ]
-                    );
+                        ]);
                 }
             }
 
@@ -184,7 +197,21 @@ class HorariosGeneralesController extends Controller
      */
     public function destroy($id)
     {
-        Horariogeneral::destroy($id);
+        try{
+            DB::beginTransaction();
+            $Intervalos = Horariogeneral::find($id);
+
+            DB::table('HorariosGenerales')->where([
+                                                    ['desde', '=', $Intervalos->desde],
+                                                    ['hasta', '=', $Intervalos->hasta],
+                                                  ])->delete();
+        }
+        catch (\Exception $ex){
+            DB::rollback();
+            return redirect('horariogeneral')->with(['message'=>'Error al eliminar los intervalos','tipo'=>'error']);
+        }
+
+        DB::commit();
         //devuelve la vista edit de los intervalos_invitados
         return redirect('/horariogeneral');
     }
@@ -206,15 +233,15 @@ class HorariosGeneralesController extends Controller
         try{
             DB::beginTransaction();
                 $puertas = DB::table('Puertas')->select('id')->get();
-                DB::table('Puertas')->update(['estatus_en_horario_general'=>'0']);
-
                 foreach ($puertas as $puerta){
                     if($request[$puerta->id]!= null){
-                        DB::table('Puertas')
-                            ->where('id',$puerta->id)
+                        Puerta::find($puerta->id)
                             ->update(['estatus_en_horario_general' => 1]);
                     }
-
+                    else{
+                        Puerta::find($puerta->id)
+                            ->update(['estatus_en_horario_general' => 0]);
+                    }
                 }
             DB::commit();
         }

@@ -19,6 +19,10 @@
     {!! Html::style('assets/plugins/bootstrap/css/bootstrap.min.css') !!}
     {{-- Fonts from Font Awsome --}}
     {!! Html::style('assets/css/font-awesome.min.css') !!}
+    {{-- Fonts from Font Awsome 5-0 --}}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    {{-- CSS Custode --}}
+    {!! Html::style('assets/css/custode_style.css') !!}
     {{-- CSS Animate --}}
     {!! Html::style('assets/css/animate.css') !!}
     {{-- Custom styles for this theme --}}
@@ -28,6 +32,7 @@
     {!! Html::style('assets/css/googleapisOpenSans.css') !!}
     {{-- Feature detection --}}
     {!! Html::script('assets/js/modernizr-2.6.2.min.js') !!}
+
     {{-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries --}}
     {{--[if lt IE 9]>
     {!! Html::script('assets/js/html5shiv.js') !!}
@@ -44,7 +49,7 @@
     <header id="header">
         <!--logo start-->
         <div class="brand">
-            <a href="/home">
+            <a href="{{route('home.home')}}">
                 <!--logo custode-->
                 <!DOCTYPE  PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
                 <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -150,9 +155,6 @@
         </div>
         <div class="user-nav">
             <ul>
-                <li class="profile-photo">
-                    <img src="assets/img/avatar.png" alt="" class="img-circle">
-                </li>
                 <li class="dropdown settings">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         {!! Auth::User()->name !!}
@@ -160,7 +162,10 @@
                     </a>
                     <ul class="dropdown-menu animated fadeInDown">
                         <li>
-                            <i class="fa fa-power-off"> {!!link_to_route('home.logout', ' Cerrar session')!!}</i>
+                            <i class="fa fa-pencil-square-o" aria-hidden="true"> {!!link_to_route('usuarios.edit_usuario_actual', 'Editar usuario')!!}</i>
+                        </li>
+                        <li>
+                            <i class="fa fa-power-off"> {!!link_to_route('home.logout', 'Cerrar sesión.')!!}</i>
                         </li>
                     </ul>
                 </li>
@@ -171,46 +176,45 @@
     <aside class="sidebar">
         <div id="leftside-navigation" class="nano">
             <ul class="nano-content">
-                <li class="active">
-                    <a href="/home" style="padding-bottom: 0em !important;"><i class="glyphicon glyphicon-home"></i><span>HOME</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('home.home')}}" ><i class="glyphicon glyphicon-home"></i><span>Inicio</span></a>
                 </li>
-                <li class="active">
-                    <a href="/funcionarios" style="padding-bottom: 0.3em !important;"><i class="fa fa-users"></i><span>FUNCIONARIOS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('funcionarios.index')}}" ><i class="fas fa-address-card"></i><span>Gestión de funcionarios</span></a>
                 </li>
-                <li class="active">
-                    <a href="/secciones" style="padding-bottom: 0.3em !important;"><i class="fa  fa-list"></i><span>SECCIONES</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('secciones.index')}}" ><i class="fas fa-puzzle-piece"></i><span>Gestión de secciones</span></a>
                 </li>
-                <li class="active">
-                    <a href="/cargos" style="padding-bottom: 0.3em !important;"><i class="fa  fa-list"></i><span>CARGOS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('cargos.index')}}" ><i class="fas fa-street-view"></i><span>Gestión de cargos</span></a>
                 </li>
-                <li class="active">
-                    <a href="/invitados" style="padding-bottom: 0.3em !important;" ><i class="fa fa-users"></i><span>INVITADOS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('invitados.index')}}"  ><i class="fas fa-user-friends"></i><span>Gestión de invitados </span></a>
                 </li>
-                <li class="active">
-                    <a href="/usuarios" style="padding-bottom: 0.3em !important;"><i class="fa fa-users"></i><span>USUARIOS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('usuarios.index')}}" ><i class="fa fa-users"></i><span>Gestión de usuarios</span></a>
                 </li>
-                <li class="active">
-                    <a href="/horariogeneral/show" style="padding-bottom: 0.3em !important;"><i class="fa fa-clock-o"></i><span>HORARIOS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('horariogeneral.show')}}" ><i class="fa fa-clock-o"></i><span>Gestión de horarios</span></a>
                 </li>
-                <li class="active">
-                    <a href="/licencias" style="padding-bottom: 0.3em !important;"><i class="fa  fa-files-o"></i><span>LICENCIAS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('licencias.index')}}" ><i class="far fa-calendar-alt"></i><span>Gestión de licencias</span></a>
                 </li>
-                <li class="active">
-                    <a href="/GestionAreas" style="padding-bottom: 0.3em !important;"><i class="fa fa-list"></i><span>GESTION DE PUERTAS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('GestionAreas.index')}}" ><i class="fas fa-door-closed"></i><span>Gestión de puertas</span></a>
                 </li>
-                 <li class="active">
-                    <a href="/area/1" style="padding-bottom: 0.3em !important;"><i class="fa fa-list"></i><span>CONTROL DE PUERTAS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('area')}}" ><i class="fas fa-door-open"></i><span>Control de puertas</span></a>
                 </li>
-                <li class="active">
-                    <a href="/Estadisticas" style="padding-bottom: 0.3em !important;"><i class="fa fa-list"></i><span>ESTADISTICAS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('estadisticas')}}" ><i class="fas fa-chart-bar"></i><span>Estadísticas</span></a>
                 </li>
-                <li class="active">
-                    <a href="/home" style="padding-bottom: 0.3em !important;"><i class="fa fa-list"></i><span>AUDITORIAS</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('auditorias')}}" ><i class="fas fa-search"></i><span>Auditoria</span></a>
                 </li>
-                <li class="active">
-                    <a href="/home" style="padding-bottom: 0em !important;"><i class="fa fa-gears"></i><span>CONFIGUARION INICIAL</span></a>
+                <li class="active paddin_menu average_font_size">
+                    <a href="{{route('home.inicial')}}" ><i class="fa fa-gears"></i><span>Configuración inicial</span></a>
                 </li>
-
             </ul>
         </div>
         </nav>

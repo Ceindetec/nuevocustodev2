@@ -15,6 +15,16 @@ class Funcionario extends Model implements AuditableContract
     //indico que la tabla se debe auditar
     use Auditable;
 
+    /**
+     * Attributes to exclude from the Audit.
+     *
+     * @var array
+     */
+    protected $auditExclude = [
+        'foto',
+    ];
+
+
     //indico los atributos de la tabla que se pueden modificar desde la vista
     protected $fillable = [
         'nombre',
@@ -28,9 +38,11 @@ class Funcionario extends Model implements AuditableContract
         'celular',
         'horario_normal',
         'licencia',
+        'estatus_licencia',
         'estatus',
         'dado_de_baja',
     ];
+
 
     /**
      * Obtiene las licecias relacionadas al funcionario

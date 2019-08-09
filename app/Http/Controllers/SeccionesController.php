@@ -44,7 +44,7 @@ class SeccionesController extends Controller
         {
             $aciones ="";
             $aciones ="<div class='btn btn-group'>";
-            $aciones =$aciones.'<a href="/secciones/'.$seccion->id.'/edit" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
+            $aciones =$aciones.'<a href="'.route('secciones.edit',$seccion->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
             $aciones =$aciones."</div>";
             return $aciones;
 
@@ -77,11 +77,11 @@ class SeccionesController extends Controller
         ]);
         try{
             DB::beginTransaction();
-                DB::table('Secciones')->insert([
-                                                'nombre'=>$request->nombre,
-                                                'estatus'=> '1',
-                                                'created_at'=>Carbon::now()->toDateTimeString()
-                                            ]);
+            Seccion::create([
+                        'nombre'=>$request->nombre,
+                        'estatus'=> '1',
+                        'created_at'=>Carbon::now()->toDateTimeString()
+                    ]);
 
                 //obtengo la ultima seccion que se creo es decir la que acabamos de crear
                 $seccion = DB::table('Secciones')
@@ -123,7 +123,7 @@ class SeccionesController extends Controller
             return redirect('/secciones/create')->with(['message'=>'A ocurrido un error','tipo'=>'error']);
         }
 
-        return redirect('/secciones/'.$seccion->id.'/edit')->with(['message'=>'La seccion se ha registrado correctamente','tipo'=>'message']);
+        return redirect('/secciones/'.$seccion->id.'/edit')->with(['message'=>'La sección se ha registrado correctamente','tipo'=>'message']);
 
     }
 
@@ -141,9 +141,25 @@ class SeccionesController extends Controller
      */
     public function edit($id)
     {
-
         //obtengo la seccion relacionada al id que llego
         $seccion = Seccion::find($id);
+
+
+        $intervalosSeccionesAgrupados = DB::table('IntervalosSecciones')
+            ->select('desde','hasta',DB::raw('count(*) as total'))
+            ->where('seccion_id',$id)
+            ->groupBy('desde','hasta')
+            ->get();
+        foreach ($intervalosSeccionesAgrupados as $intervaloSeccionAgrupado){
+            $intervaloSeccionAgrupado->dias = DB::table('IntervalosSecciones')
+                ->select('id','dia')
+                ->where([
+                    ['desde',$intervaloSeccionAgrupado->desde],
+                    ['seccion_id','=',$id],
+                ])
+                ->get();
+        }
+
 
         //creo una coleccion con todas las puertas especiales relacionas a la seccion
         $puertasEspecialesActivas = Seccion::find($id)->puertas()->where('puerta_especial',1)->get();
@@ -183,7 +199,8 @@ class SeccionesController extends Controller
                                                 'puertasNormales'=>$puertasNormales,
                                                 'puertasEspecialesActivas'=>$puertasEspecialesActivas,
                                                 'puertasNormalesActivas'=>$puertasNormalesActivas,
-                                                'cargos'=>$cargos
+                                                'cargos'=>$cargos,
+                                                'intervalosSeccionesAgrupados'=>$intervalosSeccionesAgrupados,
                                             ]);
     }
 
@@ -222,16 +239,19 @@ class SeccionesController extends Controller
             //Si la puerta fue seclecionada en el check se guarda en la relacion secionn-puerta con un 1
             // indicando que esta seccion tiene permiso sobre ella
             if($request[$puerta->id]!=null){
-                PuertaSeccion::where('seccion_id', $seccion->id)
+                $seccionPuerta = PuertaSeccion::where('seccion_id', $seccion->id)
                     ->where('puerta_id', $request[$puerta->id])
-                    ->update(['estatus_permiso' => 1]);
+                    ->get();
+
+                $seccionPuerta[0]->update(['estatus_permiso' => 1]);
             }
             else{
                 //Si la puerta no fue seclecionada en el check se guarda en la relacion secionn-puerta con un 0
                 // indicando que esta seccion no tiene permiso sobre ella
-                PuertaSeccion::where('seccion_id', $seccion->id)
-                    ->where('puerta_id', $puerta->id)
-                    ->update(['estatus_permiso' => 0]);
+                $seccionPuerta = PuertaSeccion::where('seccion_id', $seccion->id)
+                    ->where('puerta_id', $puerta->id)->get();
+
+                $seccionPuerta[0]->update(['estatus_permiso' => 0]);
             }
         }
         //actualizo la informacion como tal
@@ -239,6 +259,6 @@ class SeccionesController extends Controller
         $seccion->save();
         Session::flash('message','Seccion Actualizada Correctamente');
 
-        return redirect('/secciones')->with(['message'=>'La seccion se ha actualizado correctamente','tipo'=>'message']);
+        return redirect('/secciones')->with(['message'=>'La sección se ha actualizado correctamente','tipo'=>'message']);
     }
 }

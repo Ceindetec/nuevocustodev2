@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Intervaloinvitado;
+use App\Llave;
 use App\Puerta;
 use App\IntervaloInvitadoPuerta;
 use App\User;
@@ -56,31 +57,41 @@ class IntervalosInvitadosController extends Controller
     public function store(Request $request,$invitado_id)
     {
         DB::beginTransaction();
+            if($request->hasta_minuto < 10 ){
+                $request->hasta_minuto = '0'.$request->hasta_minuto;
+            }
+        if($request->desde_minuto < 10 ){
+            $request->desde_minuto = '0'.$request->desde_minuto;
+        }
             $llaves = DB::table('llaves')
                 ->where([
                     ['llave_rfid','=', $request->targeta_rfid],
-                    ['fecha_expiracion','>', Carbon::now()->toDateString()]//me trae las activas
+                    ['fecha_expiracion','>', Carbon::createFromFormat('Y-m-d H:i:s', Carbon::now()->toDateString().' '.$request->desde_hora.':'.$request->desde_minuto.':00')]//me trae las activas
                 ])->get();
             foreach ($llaves as $llave){
-
                 if ($llave->id_asociado != ($invitado_id+100000)) {
                     return redirect('/IntervalosInvitados/create/' . $invitado_id)->with(['message' => 'Llave RFID ya esta en uso', 'tipo' => 'error']);
                 }
             }
-            DB::table('llaves')
-                ->insert([
-                    'tipo'=> '1',//tipo 0 es el indicativo de funcionario
-                    'llave_rfid' => $request->targeta_rfid,
-                    'id_asociado' => $invitado_id+100000,
-                    'fecha_expiracion' => Carbon::now()->addDays(1)->toDateString(),
-                ]);
+
 
             if ($request->hasta_hora > $request->desde_hora) {
-
                 $this->crearIntevaloInvitado($request,$invitado_id);
+                Llave::create([
+                        'tipo'=> '1',//tipo 0 es el indicativo de funcionario
+                        'llave_rfid' => $request->targeta_rfid,
+                        'id_asociado' => $invitado_id+100000,
+                        'fecha_expiracion' => Carbon::createFromFormat('Y-m-d H:i:s', Carbon::now()->toDateString().' '.$request->hasta_hora.':'.$request->hasta_minuto.':00'),
+                    ]);
             }
             else if($request->hasta_hora == $request->desde_hora && $request->hasta_minuto > $request->desde_minuto){
                 $this->crearIntevaloInvitado($request,$invitado_id);
+                Llave::create([
+                        'tipo'=> '1',//tipo 0 es el indicativo de funcionario
+                        'llave_rfid' => $request->targeta_rfid,
+                        'id_asociado' => $invitado_id+100000,
+                        'fecha_expiracion' => Carbon::createFromFormat('Y-m-d H:i:s', Carbon::now()->toDateString().' '.$request->hasta_hora.':'.$request->hasta_minuto.':00'),
+                    ]);
             } else{
                 return redirect('IntervalosInvitados/create/'.$invitado_id)->with(['message'=>'Intervalo de tiempo invalido','tipo'=>'error']);
             }
@@ -121,18 +132,23 @@ class IntervalosInvitadosController extends Controller
     {
         try{
             DB::beginTransaction();
-                DB::table('IntervalosInvitados_Puertas')
-                    ->where('intervalo_invitado_id',$id)
-                    ->delete();
 
-                $intervalo_invitado = DB::table('IntervalosInvitados')->select('invitado_id')->where('id',$id)->first();
+                IntervaloInvitadoPuerta::where('intervalo_invitado_id',$id)
+                        ->delete();
+                $intervalo_invitado = DB::table('IntervalosInvitados')->select('invitado_id','fecha','hasta')->where('id',$id)->first();
 
-                DB::table('IntervalosInvitados')
-                    ->where('id',$id)
+                DB::table('llaves')
+                    ->where([
+                        ['id_asociado','=', $intervalo_invitado->invitado_id+100000],
+                        ['fecha_expiracion','=', Carbon::createFromFormat('Y-m-d H:i:s', $intervalo_invitado->fecha.' '.$intervalo_invitado->hasta)]
+                    ])->delete();
+
+                Intervaloinvitado::find($id)
                     ->delete();
             DB::commit();
         }
         catch (\Exception $ex){
+            dd($ex);
             DB::rollback();
             return redirect('/invitados/'.$intervalo_invitado->invitado_id.'/edit')->with(['message'=>'A ocurrido un error','tipo'=>'error']);
         }
@@ -157,7 +173,7 @@ class IntervalosInvitadosController extends Controller
             DB::beginTransaction();
 
                 $carbon = new \Carbon\Carbon();
-                DB::table('IntervalosInvitados')->insert([
+                Intervaloinvitado::create([
                     'desde'=> $request->desde_hora.":".$request->desde_minuto.":0",
                     'hasta'=> $request->hasta_hora.":".$request->hasta_minuto.":0",
                     'targeta_rfid' => $request->targeta_rfid,
@@ -175,7 +191,7 @@ class IntervalosInvitadosController extends Controller
                     //Si la puerta fue seclecionada en el check se guarda en la relacion secionn-puerta con un 1
                     // indicando que esta seccion tiene permiso sobre ella
                     if($request[$puerta->id]!=null) {
-                        DB::table('IntervalosInvitados_Puertas')->insert([
+                        IntervaloInvitadoPuerta::create([
                             'intervalo_invitado_id' => $intervalo->id,
                             'puerta_id' => $puerta->id,
                         ]);
@@ -186,6 +202,32 @@ class IntervalosInvitadosController extends Controller
             DB::rollback();
             return null;
         }
+
+    }
+
+
+    public function concluirIntevaloInvitado($id)
+    {
+
+        try{
+            DB::beginTransaction();
+
+
+                $carbon= new \Carbon\Carbon();
+                $intervalo_invitado = Intervaloinvitado::find($id);
+                DB::table('llaves')
+                    ->where([
+                        ['id_asociado','=', $intervalo_invitado->invitado_id+100000],
+                        ['fecha_expiracion','=', Carbon::createFromFormat('Y-m-d H:i:s', $intervalo_invitado->fecha.' '.$intervalo_invitado->hasta)->toDateTimeString()]
+                    ])->delete();
+                $intervalo_invitado->update(['hasta'=>$carbon->now()->subMinutes(1)->toTimeString()]);
+            DB::commit();
+        } catch (\Exception $ex){
+            DB::rollback();
+           dd($ex);
+        }
+        return redirect('/invitados/'.$intervalo_invitado->invitado_id.'/edit')->with(['message'=>'El intervalo se concluyo correctamente','tipo'=>'message']);
+
 
     }
 }

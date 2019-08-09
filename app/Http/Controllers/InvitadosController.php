@@ -39,9 +39,8 @@ class InvitadosController extends Controller
             ->addColumn('action', function ($invitado) {
                 $aciones ="";
                 $aciones ="<div class='btn btn-group'>";
-                $aciones =$aciones.'<a href="/invitados/'.$invitado->id.'/edit" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
+                $aciones =$aciones.'<a href="'.route('invitados.edit',$invitado->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
                 $aciones =$aciones."</div>";
-
             return $aciones;
             })
             ->make(true);
@@ -67,25 +66,24 @@ class InvitadosController extends Controller
     {
 
         $this->validate($request, [
-            'nombre'=>'required|min:4|max:15',
-            'apellido'=>'required|min:4|max:15',
-            'cedula'=>'required|min:10000000|max:9999999999|numeric|unique:Invitados',
-            'celular'=>'required|min:1000000000|max:9999999999|numeric',
+            'nombre'=>'required|min:4',
+            'apellido'=>'required|min:4',
+            'cedula'=>'required|numeric',
+            'celular'=>'required|numeric',
             'fecha_nacimiento'=>'required|date_format:"Y-m-d"',
-            'correo'=>'required|max:30|email',
+            'correo'=>'required|email',
         ]);
 
         try{
             DB::beginTransaction();
-            DB::table('Invitados')->insert([
+            Invitado::create([
                 'nombre'=>$request->nombre,
                 'apellido'=>$request->apellido,
                 'cedula'=>$request->cedula,
                 'celular'=>$request->celular,
                 'correo'=>$request->correo,
                 'fecha_nacimiento'=>$request->fecha_nacimiento,
-                'foto'=>"NO HAY",
-                'created_at'=>Carbon::now()->toDateTimeString()
+                'foto'=>"NO HAY"
             ]);
 
             //obtengo el ultimo invitado que se creo es decir la que acabamos de crear
@@ -130,19 +128,18 @@ class InvitadosController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'nombre'=>'required|min:4|max:15',
-            'apellido'=>'required|min:4|max:15',
-            'cedula'=>'required|min:10000000|max:9999999999|numeric|unique:Invitados,cedula,'.$id,
-            'celular'=>'required|min:1000000000|max:9999999999|numeric',
+            'nombre'=>'required|min:4',
+            'apellido'=>'required|min:4',
+            'cedula'=>'required|numeric',
+            'celular'=>'required|numeric',
             'fecha_nacimiento'=>'required|date_format:"Y-m-d"',
-            'correo'=>'required|max:30|email',
+            'correo'=>'required|email',
         ]);
 
         try{
             DB::beginTransaction();
 
-            DB::table('Invitados')
-                ->where('id',$id)
+            Invitado::find($id)
                 ->update([
                     'nombre'=>$request->nombre,
                     'apellido'=>$request->apellido,

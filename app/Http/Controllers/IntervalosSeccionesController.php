@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\IntervaloSeccion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -95,14 +96,12 @@ class IntervalosSeccionesController extends Controller
                         }
                     }
 
-                    DB::table('IntervalosSecciones')->insert(
-                        [
+                    IntervaloSeccion::create([
                             'desde'=> $request->desde_hora.":".$request->desde_minuto.":0",
                             'hasta'=> $request->hasta_hora.":".$request->hasta_minuto.":0",
                             'dia'=> $request->$i,
                             'seccion_id' => $seccion_id,
-                        ]
-                    );
+                        ]);
                 }
             }
 
@@ -129,10 +128,21 @@ class IntervalosSeccionesController extends Controller
     public function destroy($id,$seccion_id)
     {
         try{
-            DB::beginTransaction();
-                DB::table('IntervalosSecciones')
-                    ->where('id',$id)
-                    ->delete();
+
+
+
+
+            $intervalo = IntervaloSeccion::find($id);
+
+            $intervalosSecciones = IntervaloSeccion::where([
+                    ['desde','=',$intervalo->desde],
+                    ['seccion_id','=',$seccion_id]
+                ])->get();
+
+            foreach ($intervalosSecciones as $intervalosSeccion){
+                $intervalosSeccion->delete();
+            }
+
             DB::commit();
         }
         catch (\Exception $ex){

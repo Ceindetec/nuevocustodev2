@@ -14,7 +14,7 @@
                 <h3 class="panel-title">Editar usuario</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -35,13 +35,12 @@
                     <div class="col-xs-12 row">
                         <div class="col-xs-6">
                             <div class="col-xs-12">
-                                <h1>Control Puertas</h1>
+                                <h1>Puertas</h1>
                             </div>
                             <div class="col-xs-12">
                                 @if($usuario->puertas->where('estatus','1')->count('id')==0)
                                     <div class="alert alert-danger alert-dismissible" role="alert" style="margin-bottom: 1em;">
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                        NO HAY PUERTAS ACTIVAS.
+                                        No hay puertas activas.
                                     </div>
                                 @endif
                                 @foreach($usuario->puertas->where('estatus','1') as $puertasPermisos)
@@ -54,7 +53,7 @@
                         </div>
                         <div class="col-xs-6">
                             <div class="col-xs-12">
-                                <h1>Permisos de ROL</h1>
+                                <h1>Roles</h1>
                             </div>
                             @foreach($usuario->permisos as $permisosUsuario)
                                 <div class="col-xs-8">

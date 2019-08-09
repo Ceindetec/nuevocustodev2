@@ -11,7 +11,7 @@ editar licencia en curso
             <h3 class="panel-title">Editar Licencia En Curso</h3>
             <div class="actions pull-right">
                 <i class="fa fa-chevron-down"></i>
-                <i class="fa fa-times"></i>
+
             </div>
         </div>
         <div class="panel-body">
@@ -44,7 +44,7 @@ editar licencia en curso
             <h3 class="panel-title">Datos del funcionario</h3>
             <div class="actions pull-right">
                 <i class="fa fa-chevron-down"></i>
-                <i class="fa fa-times"></i>
+
             </div>
         </div>
         <div class="panel-body">
@@ -54,5 +54,20 @@ editar licencia en curso
 </div>
 
 
+
+@endsection
+@section('cargarjs')
+    {!! Html::script("bootstrap-datepicker/js/bootstrap-datepicker.min.js") !!}
+    {!! Html::script("bootstrap-datepicker/js/datepicker-es.js") !!}
+
+
+    <script>
+        //
+        $(".datepicker").datepicker({
+            format: 'yyyy-mm-dd',
+            language: 'es'
+        });
+
+    </script>
 
 @endsection

@@ -3,6 +3,13 @@
     agregar licencia
 @endsection
 
+@section('cargarcss')
+    <!-- iCheck-->
+    {!! Html::style("assets/plugins/icheck/css/_all.css") !!}
+    {!! Html::style("bootstrap-datepicker/css/bootstrap-datepicker.min.css") !!}
+
+@endsection
+
 @section('content')
     <div class="col-md-12">
         <div class="panel panel-primary">
@@ -10,7 +17,6 @@
                 <h3 class="panel-title">Crear Licencia</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
                 </div>
             </div>
             <div class="panel-body">
@@ -33,14 +39,13 @@
         </div>
     </div>
 
-
     <div class="col-md-12">
         <div class="panel panel-warning">
             <div class="panel-heading">
                 <h3 class="panel-title">Datos del funcionario</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">

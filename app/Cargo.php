@@ -17,7 +17,7 @@ class Cargo extends Model implements AuditableContract
 
     //indico los atributos de la tabla que se pueden modificar desde la vista
     protected $fillable = [
-        'cargo_id','seccion_id','estatus_permiso',
+        'nombre','estatus'
     ];
 
     /**
@@ -28,8 +28,11 @@ class Cargo extends Model implements AuditableContract
      */
     public function secciones()
     {
-
         return $this->belongsToMany('App\Seccion','Cargos_Secciones','cargo_id','seccion_id')->where('estatus_permiso',1);
 
+    }
+    public function seccionesActivas()
+    {
+        return $this->belongsToMany('App\Seccion','Cargos_Secciones','cargo_id','seccion_id')->wherePivot('estatus_permiso',1);
     }
 }

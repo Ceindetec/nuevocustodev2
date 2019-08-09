@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PuertasActualizarRequest;
 use App\Http\Requests\PuertasCrearRequest;
 use App\Puerta;
+use App\Seccion;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,9 +27,9 @@ class PuertasController extends Controller
         //Para control de puertas
         //$this->middleware('ControlPuertasMiddleware');
 
-        //Para el de auditorias
+        //Para el de auditoria
         //$this->middleware('GestionarAuditoriasMiddleware');
-        //Para el de auditorias
+        //Para el de auditoria
 
         //$this->middleware('GestionarAuditoriasMiddleware');
     }
@@ -73,18 +74,15 @@ class PuertasController extends Controller
     try {
 
         DB::beginTransaction();
-        DB::table('puertas')
-            ->insert(
-                [
+        Puerta::create([
                     'puerta_especial' => $request->puerta_especial,
                     'nombre' => $request->nombre,
                     'llave_rfid' => $request->llave_rfid,
                     'estatus' => '1',
                     'estatus_en_horario_general' => '0',
                     'ip' => $request->ip,
-                    'created_at'=>Carbon::now()->toDateTimeString(),
-                ]
-            );
+
+                ]);
         $puerta = DB::table('Puertas')
             ->select('id')
             ->orderBy('created_at', 'desc')
@@ -97,10 +95,21 @@ class PuertasController extends Controller
                     'estatus_permiso' => 0,
                 ]);
             }
+
+        $secciones= Seccion::all();
+        foreach ($secciones as $seccion) {
+            DB::table('Puertas_Secciones')->insert([
+                'seccion_id' => $seccion->id,
+                'puerta_id' => $puerta->id,
+                'estatus_permiso' => 0,
+            ]);
+        }
+
         DB::commit();
     }catch (\Exception $ex){
         DB::rollback();
-        return redirect('/GestionAreas')->with(['message' => 'La Puerta  ha tenido un error al crear', 'tipo' => 'message']);
+        dd($ex);
+        return redirect('/GestionAreas')->with(['message' => 'La Puerta  ha tenido un error al crear', 'tipo' => 'error']);
     }
         return redirect('/GestionAreas')->with(['message' => 'La Puerta  se ha creado correctamente', 'tipo' => 'message']);
     }
@@ -145,8 +154,7 @@ class PuertasController extends Controller
             {
                 DB::beginTransaction();
                 if($request->estatus!=null) {
-                    DB::table('puertas')
-                        ->where('id',$id)
+                    Puerta::find($id)
                         ->update(
                             [
                                 'nombre'=>$request->nombre,
@@ -158,8 +166,7 @@ class PuertasController extends Controller
                         );
                 }
                 else{
-                    DB::table('puertas')
-                        ->where('id',$id)
+                    Puerta::find($id)
                         ->update(
                             [
                                 'nombre'=>$request->nombre,

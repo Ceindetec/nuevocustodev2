@@ -1,10 +1,10 @@
 <div class="col-md-12">
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Lista De Puertas Asignadas</h3>
+            <h3 class="panel-title">Puertas activas</h3>
             <div class="actions pull-right">
                 <i class="fa fa-chevron-down"></i>
-                <i class="fa fa-times"></i>
+
             </div>
         </div>
         <div class="panel-body">
@@ -13,7 +13,7 @@
                 <div class="col-xs-12 " >
                     <div class="col-xs-6">
                         <div class="col-xs-12">
-                            <h1>Puertas normales</h1>
+                            <h1>Normales</h1>
                         </div>
                         @foreach($puertasNormales as $puertaNormal)
 
@@ -25,7 +25,7 @@
                     </div>
                     <div class="col-xs-6">
                         <div class="col-xs-12">
-                            <h1>Puertas especiales</h1>
+                            <h1>Especiales</h1>
                         </div>
 
                         @foreach($puertasEspeciales as $puertaEspecial)
@@ -43,10 +43,10 @@
 <div class="col-md-12">
     <div class="panel panel-info">
         <div class="panel-heading">
-            <h3 class="panel-title">Lista de intervalos</h3>
+            <h3 class="panel-title">Intervalos de tiempo</h3>
             <div class="actions pull-right">
                 <i class="fa fa-chevron-down"></i>
-                <i class="fa fa-times"></i>
+
             </div>
         </div>
         <div class="panel-body">
@@ -54,33 +54,38 @@
 
                 <thead>
                 <tr>
-                    <th>dia</th>
+
                     <th>desde</th>
                     <th>hasta</th>
+                    <th>dias</th>
 
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($intervalosHorarioGeneral as $intervaloHorarioGeneral)
+                @foreach($intervalosHorarioGeneralAgrupados as $intervaloHorarioGeneralAgrupado)
                     <tr>
-                        @if($intervaloHorarioGeneral->dia == 1)
-                            <td>Lunes</td>
-                        @elseif($intervaloHorarioGeneral->dia == 2)
-                            <td>Martes</td>
-                        @elseif($intervaloHorarioGeneral->dia == 3)
-                            <td>Miercoles</td>
-                        @elseif($intervaloHorarioGeneral->dia == 4)
-                            <td>Jueves</td>
-                        @elseif($intervaloHorarioGeneral->dia == 5)
-                            <td>Viernes</td>
-                        @elseif($intervaloHorarioGeneral->dia == 6)
-                            <td>Sabado</td>
-                        @elseif($intervaloHorarioGeneral->dia == 7)
-                            <td>Domingo</td>
-                        @endif
-                        <td>{{$intervaloHorarioGeneral->desde}}</td>
-                        <td>{{$intervaloHorarioGeneral->hasta}}</td>
+                        <td>{{$intervaloHorarioGeneralAgrupado->desde}}</td>
+                        <td>{{$intervaloHorarioGeneralAgrupado->hasta}}</td>
+                        <td>
+                            @foreach($intervaloHorarioGeneralAgrupado->dias as $dia)
+                                @if($dia->dia == 1)
+                                    Lunes
+                                @elseif($dia->dia == 2)
+                                    Martes
+                                @elseif($dia->dia == 3)
+                                    Miercoles
+                                @elseif($dia->dia == 4)
+                                    Jueves
+                                @elseif($dia->dia == 5)
+                                    Viernes
+                                @elseif($dia->dia == 6)
+                                    Sabado
+                                @elseif($dia->dia == 7)
+                                    Domingo
+                                @endif
 
+                            @endforeach
+                        </td>
 
                     </tr>
                 @endforeach

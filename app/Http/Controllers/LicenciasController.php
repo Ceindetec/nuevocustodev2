@@ -107,8 +107,6 @@ class LicenciasController extends Controller
      */
     public function store(Request $request, $funcionario_id)
     {
-
-
         $nueva_licencia_hasta = Carbon::createFromFormat('Y-m-d', $request->hasta);
         $nueva_licencia_desde = Carbon::createFromFormat('Y-m-d', $request->desde);
         $hoy = Carbon::createFromFormat('Y-m-d', Carbon::now()->toDateString());
@@ -145,12 +143,13 @@ class LicenciasController extends Controller
                         DB::table('Licencias')->where('id', $licenciaActiva->id)->update(['estatus' =>'0']);
                     }
                 }
-                DB::table('Licencias')->insert([
+                Licencia::create([
                     'desde'=> $request->desde,
                     'hasta'=> $request->hasta,
                     'estatus' => 1,
                     'funcionario_id'=> $funcionario_id,
                 ]);
+
             DB::commit();
         } catch (\Exception $ex){
             DB::rollback();
@@ -228,8 +227,7 @@ class LicenciasController extends Controller
 
                 }
 
-                DB::table('Licencias')
-                    ->where('id',$id)
+                Licencia::find($id)
                     ->update([
                         'desde'=> $request->desde,
                         'hasta'=> $request->hasta,
@@ -341,8 +339,7 @@ class LicenciasController extends Controller
     {
         try{
             DB::beginTransaction();
-                DB::table('Licencias')
-                    ->where('id',$id)
+                Licencia::find($id)
                     ->delete();
             DB::commit();
         }
@@ -358,8 +355,7 @@ class LicenciasController extends Controller
     {
         try{
             DB::beginTransaction();
-                DB::table('Licencias')
-                    ->where('id',$id)
+            Licencia::find($id)
                     ->update([
                         'estatus'=>0,
                         'hasta'=> Carbon::now()->toDateString()
@@ -374,13 +370,13 @@ class LicenciasController extends Controller
     }
 
     /**
-     * Actualiza el estado de todas las licencias poniendo en estatus 0 si la fecha de la licencia caduci, este metodo esta diseñado
+     * Actualiza el estado de todas las licencias poniendo en estatus 0 si la fecha de la licencia caduca, este metodo esta diseñado
      * para que sea activado una vez cada noche en el servidor actualmente se ejecuta cada vez
      * que se ingresa a la vista index de licencias
      *
      * @author Edwin Sandoval
      */
-    private function actualizarEstatusLicencias(){
+    public function actualizarEstatusLicencias(){
 
         //obtengo una coleccion con todas las licencias activas
         $licenciasActivas=Licencia::all()->where('estatus',1);

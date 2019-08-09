@@ -9,6 +9,7 @@ use App\Cargo;
 use App\Horariogeneral;
 use App\Funcionario;
 use App\Http\Requests\FuncionariosActualizarRequest;
+use App\Llave;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,9 +39,9 @@ class FuncionariosController extends Controller
     public function index()
     {
         $this->actualizar_estado_licencias();
+
         $funcionarios=Funcionario::all();
         return view('funcionarios.index',compact('funcionarios'));
-
     }
 
     /**
@@ -69,35 +70,32 @@ class FuncionariosController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
-
     public function store(\App\Http\Requests\FuncionariosCrearRequest $request)
     {
         if($request->cargo_id==null)
         {
             return redirect('/funcionarios/create')->with(['message'=>'El cargo no puede ser nulo, crear Cargo','tipo'=>'error']);
         }
+
         if($request->fotocreada!=null){
             try{
                 DB::beginTransaction();
+                Funcionario::create([
+                    'nombre'=>$request->nombre,
+                    'apellido'=>$request->apellido,
+                    'cedula'=>$request->cedula,
+                    'correo'=>$request->correo,
+                    'tarjeta_rfid'=>$request->tarjeta_rfid,
+                    'fecha_nacimiento'=>$request->fecha_nacimiento,
+                    'cargo_id'=>$request->cargo_id,
+                    'estatus_licencia'=>'0',
+                    'foto'=>$request->fotocreada,
+                    'celular'=>$request->celular,
+                    'horario_normal'=>$request->horario_normal,
+                    'licencia'=>'0',
+                    'estatus'=>'1',//ojo con esto, ese campo es dado de baja donde 0 es inactivo
+                ]);
 
-                DB::table('funcionarios')
-                    ->insert([
-                        'nombre'=>$request->nombre,
-                        'apellido'=>$request->apellido,
-                        'cedula'=>$request->cedula,
-                        'correo'=>$request->correo,
-                        'tarjeta_rfid'=>$request->tarjeta_rfid,
-                        'fecha_nacimiento'=>$request->fecha_nacimiento,
-                        'cargo_id'=>$request->cargo_id,
-                        'estatus_licencia'=>'0',
-                        'foto'=>$request->fotocreada,
-                        'celular'=>$request->celular,
-                        'horario_normal'=>$request->horario_normal,
-                        'licencia'=>'0',
-                        'estatus'=>'1',//ojo con esto, ese campo es dado de baja donde 0 es inactivo
-                        'created_at'=>Carbon::now(),
-                    ]);
                 $funcionario = DB::table('funcionarios')
                     ->select('id')
                     ->orderBy('created_at', 'desc')
@@ -116,15 +114,14 @@ class FuncionariosController extends Controller
                     }
                 }
 
-                DB::table('llaves')
-                    ->insert([
+                Llave::create([
                         'tipo'=> '0',//tipo 0 es el indicativo de funcionario
                         'llave_rfid' => $request->tarjeta_rfid,
                         'id_asociado' => $funcionario->id,
                         'fecha_expiracion' => Carbon::now()->addYears(10)->toDateString(),
                     ]);
                 DB::commit();
-                return redirect('/funcionarios')->with(['message'=>'El Funcionario se ha registrado correctamente','tipo'=>'message']);
+                return redirect('/funcionarios')->with(['message'=>'El funcionario se ha registrado correctamente','tipo'=>'message']);
             }
             catch (\Exception $ex){
                 DB::rollback();
@@ -132,59 +129,56 @@ class FuncionariosController extends Controller
             }
         }
         else{
-        try{
-            DB::beginTransaction();
+            try{
+                DB::beginTransaction();
 
-                DB::table('funcionarios')
-                    ->insert([
-                            'nombre'=>$request->nombre,
-                            'apellido'=>$request->apellido,
-                            'cedula'=>$request->cedula,
-                            'correo'=>$request->correo,
-                            'tarjeta_rfid'=>$request->tarjeta_rfid,
-                            'fecha_nacimiento'=>$request->fecha_nacimiento,
-                            'cargo_id'=>$request->cargo_id,
-                            'estatus_licencia'=>'0',
-                            'foto'=>'0',
-                            'celular'=>$request->celular,
-                            'horario_normal'=>$request->horario_normal,
-                            'licencia'=>'0',
-                            'estatus'=>'1',//ojo con esto, ese campo es dado de baja donde 0 es inactivo
-                            'created_at'=>Carbon::now(),
-                    ]);
-                $funcionario = DB::table('funcionarios')
-                                    ->select('id')
-                                    ->orderBy('created_at', 'desc')
-                                    ->first();
-
-                $llaves = DB::table('llaves')
-                                    ->where([
-                                        ['llave_rfid','=', $request->tarjeta_rfid],
-                                        ['fecha_expiracion','>', Carbon::now()->toDateString()]//me trae las activas
-                                    ])->get();
-
-
-                foreach ($llaves as $llave){
-                    if ($llave->id_asociado != $funcionario->id){
-                        return redirect('/funcionarios/create')->with(['message'=>'Llave RFID ya esta en uso','tipo'=>'error']);
-                    }
-                }
-
-                DB::table('llaves')
-                        ->insert([
-                            'tipo'=> '0',//tipo 0 es el indicativo de funcionario
-                            'llave_rfid' => $request->tarjeta_rfid,
-                            'id_asociado' => $funcionario->id,
-                            'fecha_expiracion' => Carbon::now()->addYears(10)->toDateString(),
+                Funcionario::create([
+                                'nombre'=>$request->nombre,
+                                'apellido'=>$request->apellido,
+                                'cedula'=>$request->cedula,
+                                'correo'=>$request->correo,
+                                'tarjeta_rfid'=>$request->tarjeta_rfid,
+                                'fecha_nacimiento'=>$request->fecha_nacimiento,
+                                'cargo_id'=>$request->cargo_id,
+                                'estatus_licencia'=>'0',
+                                'foto'=>'0000',
+                                'celular'=>$request->celular,
+                                'horario_normal'=>$request->horario_normal,
+                                'licencia'=>'0',
+                                'estatus'=>'1',//ojo con esto, ese campo es dado de baja donde 0 es inactivo
                         ]);
-            DB::commit();
-            return redirect('/funcionarios')->with(['message'=>'El Funcionario se ha registrado correctamente','tipo'=>'message']);
-        }
-        catch (\Exception $ex){
-            DB::rollback();
-            dd($ex);
-            return redirect('/funcionarios/create')->with(['message'=>'A ocurrido un error','tipo'=>'error']);
-        }
+                    $funcionario = DB::table('funcionarios')
+                                        ->select('id')
+                                        ->orderBy('created_at', 'desc')
+                                        ->first();
+
+                    $llaves = DB::table('llaves')
+                                        ->where([
+                                            ['llave_rfid','=', $request->tarjeta_rfid],
+                                            ['fecha_expiracion','>', Carbon::now()->toDateString()]//me trae las activas
+                                        ])->get();
+
+
+                    foreach ($llaves as $llave){
+                        if ($llave->id_asociado != $funcionario->id){
+                            return redirect('/funcionarios/create')->with(['message'=>'Llave RFID ya esta en uso','tipo'=>'error']);
+                        }
+                    }
+
+                Llave::create([
+                                'tipo'=> '0',//tipo 0 es el indicativo de funcionario
+                                'llave_rfid' => $request->tarjeta_rfid,
+                                'id_asociado' => $funcionario->id,
+                                'fecha_expiracion' => Carbon::now()->addYears(10)->toDateString(),
+                            ]);
+                DB::commit();
+                return redirect('/funcionarios')->with(['message'=>'El funcionario se ha registrado correctamente','tipo'=>'message']);
+            }
+            catch (\Exception $ex){
+                DB::rollback();
+                dd($ex);
+                return redirect('/funcionarios/create')->with(['message'=>'A ocurrido un error','tipo'=>'error']);
+            }
         }
     }
     /**
@@ -241,14 +235,8 @@ class FuncionariosController extends Controller
             }
 
 
-            if($request->foto==null)
-            {
-                $request->fotocreada=DB::table("funcionarios")->where('id',$id)->get()[0]->foto;
-            }
-
             if($request->estatus!=null) {
-                DB::table('funcionarios')
-                    ->where('id',$id)
+                Funcionario::find($id)
                     ->update(
                         [
                             'nombre'=>$request->nombre,
@@ -268,8 +256,7 @@ class FuncionariosController extends Controller
                     );
             }
             else{
-                DB::table('funcionarios')
-                    ->where('id',$id)
+                Funcionario::find($id)
                     ->update(
                         [
                             'nombre'=>$request->nombre,
@@ -288,8 +275,6 @@ class FuncionariosController extends Controller
                     );
             }
 
-
-
             DB::table('llaves')
                     ->where([
                         ['id_asociado','=', $id]
@@ -297,8 +282,7 @@ class FuncionariosController extends Controller
                     ->delete();
             $funcionario = DB::table('funcionarios')->select('estatus')->where('id',$id)->get()->first();
             if($funcionario->estatus == 1){
-                DB::table('llaves')
-                    ->insert([
+                Llave::create([
                         'tipo'=> '0',//tipo 0 es el indicativo de funcionario
                         'llave_rfid' => $request->tarjeta_rfid,
                         'id_asociado' => $id,
@@ -326,11 +310,11 @@ class FuncionariosController extends Controller
 
         }
         catch (\Exception $ex){
-            dd($ex);
+            //dd($ex);
             DB::rollback();
             return redirect('/funcionarios/'+$id+'/edit')->with(['message'=>'A ocurrido un error','tipo'=>'error']);
         }
-        return redirect('/funcionarios')->with(['message'=>'El funcionario se ha Actualizado correctamente','tipo'=>'message']);
+        return redirect('/funcionarios')->with(['message'=>'El funcionario se ha actualizado correctamente','tipo'=>'message']);
     }
 
 
@@ -355,8 +339,6 @@ class FuncionariosController extends Controller
 
        $funcionario = Funcionario::find($funcionario_id);
 
-
-
        if($funcionario->horario_normal == 0 ){
 
            $puertasNormales = DB::table('Puertas')
@@ -365,18 +347,41 @@ class FuncionariosController extends Controller
            $puertasEspeciales = DB::table('Puertas')
                                    ->select('id','nombre','estatus_en_horario_general')
                                    ->where('puerta_especial',1)->get();
-           $intervalosHorarioGeneral = Horariogeneral::all();
+                                   $intervalosHorarioGeneralAgrupados = DB::table('HorariosGenerales')
+                                       ->select('desde','hasta',DB::raw('count(*) as total'))
+                                       ->groupBy('desde','hasta')
+                                       ->get();
+
+           foreach ($intervalosHorarioGeneralAgrupados as $intervaloHorarioGeneralAgrupado){
+               $intervaloHorarioGeneralAgrupado->dias = DB::table('HorariosGenerales')->select('dia')->where('desde',$intervaloHorarioGeneralAgrupado->desde)->get();
+           }
            // redirecciona a la vista horario de funcionario y carga el horario general de la empresa
-           return view('funcionarios.horario',['funcionario'=>$funcionario,'puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneral'=>$intervalosHorarioGeneral]);
+           return view('funcionarios.horario',['funcionario'=>$funcionario,'puertasNormales'=>$puertasNormales,'puertasEspeciales'=>$puertasEspeciales,'intervalosHorarioGeneralAgrupados'=>$intervalosHorarioGeneralAgrupados]);
 
        }
        if($funcionario->horario_normal == 1 ){
             $horariosEspeciales = $funcionario->horariosEspeciales;
+           $horariosEspecialesAgrupados = DB::table('IntervalosFuncionarios')
+               ->select('desde','hasta',DB::raw('count(*) as total'))
+               ->where('funcionario_id',$funcionario->id)
+               ->groupBy('desde','hasta')
+               ->get();
+           foreach ($horariosEspecialesAgrupados as $horarioEspecialesAgrupado){
+               $horarioEspecialesAgrupado->dias = DB::table('IntervalosFuncionarios')
+                   ->select('id','dia')
+                   ->where([
+                       ['desde',$horarioEspecialesAgrupado->desde],
+                       ['funcionario_id','=',$funcionario->id],
+                   ])
+                   ->get();
+           }
+
+
            // redirecciona a la vista horario de funcionario y carga el horario especial del funcionario
-            return view('funcionarios.horario',['funcionario'=>$funcionario,'horariosEspeciales'=>$horariosEspeciales]);
+            return view('funcionarios.horario',['funcionario'=>$funcionario,'horariosEspecialesAgrupados'=>$horariosEspecialesAgrupados]);
        }
         if($funcionario->horario_normal == 2 ){
-            // redirecciona a la vista horario de funcionario y carga el horario  de cada seccion asociada al cargo del funcionario
+            // redirecciona a la vista horario de funcionario y carga el horario  de cada sección asociada al cargo del funcionario
             return view('funcionarios.horario',['funcionario'=>$funcionario]);
         }
 
@@ -394,11 +399,10 @@ class FuncionariosController extends Controller
      * @author Edwin Sandoval
      */
 
-
-
     private function actualizar_estado_licencias(){
 
         $funcionarios=Funcionario::all();
+
 
         try {
             DB::beginTransaction();
@@ -416,18 +420,17 @@ class FuncionariosController extends Controller
                             DB::table('Funcionarios')->where('id', $funcionario->id)->update(['licencia' =>'1']);
                         }
                     }
-
-
                 }
             DB::commit();
         } catch (\Exception $ex){
             DB::rollback();
+
         }
     }
 
     public  function listar()
     {
-            $Funcionarios= Funcionario::select(['id','nombre','apellido','cedula','correo','estatus'])->where('estatus',1)->get();
+            $Funcionarios= Funcionario::select(['id','nombre','apellido','cedula','correo','estatus','licencia'])->where('estatus',1)->get();
             return \Datatables::of($Funcionarios)
                 ->addColumn('action', function ($Funcionario) {
                     $aciones ="";
@@ -435,17 +438,17 @@ class FuncionariosController extends Controller
                     if ($Funcionario->licencia==0)
                     {
                         $aciones ="<div class='btn btn-group'>";
-                        $aciones =$aciones.'<a href="/funcionarios/'.$Funcionario->id.'/edit" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
-                        $aciones = $aciones.'<a href="/funcionarios/horario/'.$Funcionario->id.'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Horario</a>';
-                        $aciones = $aciones.'<a href="/licencias/create/'.$Funcionario->id.'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i>Agregar Licencias</a>';
+                        $aciones =$aciones.'<a href="'.route('funcionarios.edit',$Funcionario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
+                        $aciones = $aciones.'<a href="'.route('funcionarios.horario',$Funcionario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Horario</a>';
+                        $aciones = $aciones.'<a href="'.route('licencias.create',$Funcionario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i>Agregar Licencias</a>';
                         $aciones =$aciones."</div>";
 
                     }else
                     {
                         $aciones ="<div class='btn btn-group'>";
-                        $aciones = $aciones.'<a href="/funcionarios/'.$Funcionario->id.'/edit" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
-                        $aciones = $aciones.'<a href="/funcionarios/horario/'.$Funcionario->id.'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Horario</a>';
-                        $aciones = $aciones.'<a href="licencias" class="btn btn-info"><i class="glyphicon glyphicon-edit"></i>En Licencia</a>';
+                        $aciones =$aciones.'<a href="'.route('funcionarios.edit',$Funcionario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
+                        $aciones = $aciones.'<a href="'.route('funcionarios.horario',$Funcionario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Horario</a>';
+                        $aciones = $aciones.'<a href="'.route('licencias.index').'" class="btn btn-info"><i class="glyphicon glyphicon-edit"></i>En Licencia</a>';
                         $aciones =$aciones."</div>";
                     }
                     return $aciones;

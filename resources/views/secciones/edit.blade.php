@@ -1,7 +1,7 @@
 @extends('layouts.principal')
 
 @section('titel')
-    editar seccion
+    editar sección
 @endsection
 
 @section('cargarcss')
@@ -16,10 +16,10 @@
     <div class="col-md-12">
         <div class="panel panel-primary">
             <div class="panel-heading">
-                <h3 class="panel-title">Editar Seccion</h3>
+                <h3 class="panel-title">Editar sección</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -46,7 +46,7 @@
                                 <h1>Puertas normales</h1>
                             </div>
                             @foreach($puertasNormales as $puertaNormal)
-                                <div class="col-xs-4">
+                                <div class="col-xs-6">
                                     {!! Form::checkbox($puertaNormal->id, $puertaNormal->id,$puertaNormal->estatus_permiso) !!}
                                     {!! Form::label($puertaNormal->nombre) !!}
                                 </div>
@@ -58,7 +58,7 @@
                             </div>
 
                             @foreach($puertasEspeciales as $puertaEspecial)
-                                <div class="col-xs-4">
+                                <div class="col-xs-6">
                                     {!! Form::checkbox($puertaEspecial->id, $puertaEspecial->id, $puertaEspecial->estatus_permiso) !!}
                                     {!! Form::label($puertaEspecial->nombre) !!}
                                 </div>
@@ -84,10 +84,10 @@
     <div class="col-md-12">
         <div class="panel panel-info">
             <div class="panel-heading">
-                <h3 class="panel-title">CARGOS QUE SE DESEMPEÑAN EN ESTA AREA</h3>
+                <h3 class="panel-title">Cargos asociados a esta sección</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -100,10 +100,10 @@
     <div class="col-md-12">
         <div class="panel panel-info">
             <div class="panel-heading">
-                <h3 class="panel-title">Intervalos de tiempo del area</h3>
+                <h3 class="panel-title">Puertas e intervalos de tiempo de la sección</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -111,10 +111,10 @@
                 <div class="col-md-12">
                     <div class="panel panel-solid-danger">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Puertas activas actualmente para esta seccion</h3>
+                            <h3 class="panel-title">Puertas activas para esta sección</h3>
                             <div class="actions pull-right">
                                 <i class="fa fa-chevron-down"></i>
-                                <i class="fa fa-times"></i>
+
                             </div>
                         </div>
                         <div class="panel-body" style="padding-top: 0em;">
@@ -126,8 +126,8 @@
                                         </div>
                                         @foreach($puertasNormalesActivas as $puertaNormalActiva)
                                             @if($puertaNormalActiva->pivot->estatus_permiso == 1  )
-                                                <div class="col-xs-4">
-                                                    {!! Form::checkbox('asd', 'asd',1) !!}
+                                                <div class="col-xs-6">
+                                                    {!! Form::checkbox('asd', 'asd',1, ['disabled'=>'true']) !!}
                                                     {!! Form::label($puertaNormalActiva->nombre) !!}
                                                 </div>
                                             @endif
@@ -139,8 +139,8 @@
                                         </div>
                                         @foreach($puertasEspecialesActivas as $puertaEspecialActiva)
                                             @if($puertaEspecialActiva->pivot->estatus_permiso == 1  )
-                                                <div class="col-xs-4">
-                                                    {!! Form::checkbox('asd', 'asd',1) !!}
+                                                <div class="col-xs-6">
+                                                    {!! Form::checkbox('asd', 'asd',1,['disabled'=>'true']) !!}
                                                     {!! Form::label($puertaEspecialActiva->nombre) !!}
                                                 </div>
                                             @endif
@@ -151,14 +151,6 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
-
-
-
-
                 @include('intervalos_secciones.index')
             </div>
         </div>

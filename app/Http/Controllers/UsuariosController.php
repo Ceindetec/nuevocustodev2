@@ -9,6 +9,7 @@ use App\UserPuerta;
 use App\PermisoUser;
 use App\Puerta;
 use App\Permiso;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Session;
 use Redirect;
@@ -21,7 +22,7 @@ class UsuariosController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
-        $this->middleware('GestionarUsuariosMiddleware');
+        $this->middleware('GestionarUsuariosMiddleware',['except' => ['editUsuarioActual', 'updateUsuarioActual']]);
     }
 
 
@@ -47,7 +48,7 @@ class UsuariosController extends Controller
             ->addColumn('action', function ($usuario) {
                 $aciones ="";
                 $aciones ="<div class='btn btn-group'>";
-                $aciones =$aciones.'<a href="usuarios/'.$usuario->id.'/edit" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
+                $aciones =$aciones.'<a href="'.route('usuarios.edit',$usuario->id).'" class="btn btn-primary"><i class="glyphicon glyphicon-edit"></i> Editar</a>';
                 $aciones =$aciones."</div>";
 
                 return $aciones;
@@ -91,12 +92,14 @@ class UsuariosController extends Controller
         try {
             DB::beginTransaction();
 
-                DB::table('Users')->insert([
+
+                User::create([
                     'name'=> $request['name'],
                     'email'=> $request['name'],
                     'password' => bcrypt($request['password']),
                     'estatus'=> '1',
                     'created_at'=>Carbon::now()->toDateTimeString(),
+                    'updated_at'=>Carbon::now()->toDateTimeString(),
                 ]);
 
                 //obtengo el ultimo usuario que se creo es decir la que acabamos de crear
@@ -175,7 +178,6 @@ class UsuariosController extends Controller
             'name' => 'min:4|required|unique:Users,name,'.$id,
         ]);
 
-
         if ($request->password!= $request->password_confirmacion){
             return redirect('/usuarios/'.$id.'/edit')->with(['message'=>'Las contraseñas no coinciden','tipo'=>'error']);
         }
@@ -184,9 +186,8 @@ class UsuariosController extends Controller
             DB::beginTransaction();
 
                 //obtengo le usuario relacionado al id que llego
-                $usuario = DB::table('Users')
-                                ->where('id',$id)
-                                ->first();
+
+                $usuario = User::find($id);
 
                 //creo una coleccion con todas las puertas
                 $todasPuertas = Puerta::all();
@@ -215,10 +216,6 @@ class UsuariosController extends Controller
                 //creo una coleccion con todos los permisos
                 $todosPermiso = Permiso::all();
 
-                //Hago que todas los permisos tengan estatus_permiso en 0
-                DB::table('Permisos_Users')
-                    ->where('usuario_id', $usuario->id)
-                    ->update(['estatus_permiso' => 0]);
 
                 //los itero para obtener cada permiso registrado y marco los seleccionados con estatus_permiso en 1
                 foreach($todosPermiso as $permiso){
@@ -227,12 +224,22 @@ class UsuariosController extends Controller
 
                         //Si el permiso fue seclecionada en el check se guarda en la relacion usuario-permiso con un 1
                         // indicando que este usuario tiene ese permiso.
-                        DB::table('Permisos_Users')
-                            ->where([
+                        $permisoUser = PermisoUser::where([
                                 ['usuario_id','=', $usuario->id],
-                                ['permiso_id','=', $request[$permiso->id+10000]],
-                                ])
-                            ->update(['estatus_permiso' => 1]);
+                                ['permiso_id','=', $permiso->id],
+                                ])->get();
+
+                        $permisoUser[0]->update(['estatus_permiso' => 1]);
+                    }else{
+                        //Si el permiso fue seclecionada en el check se guarda en la relacion usuario-permiso con un 1
+                        // indicando que este usuario tiene ese permiso.
+                        $permisoUser = PermisoUser::where([
+                            ['usuario_id','=', $usuario->id],
+                            ['permiso_id','=', $permiso->id],
+                        ])->get();
+
+                        $permisoUser[0]->update(['estatus_permiso' => 0]);
+
                     }
                 }
                 // si el check estatus es nulo le asigno el valor que tiene el usuario actualmente
@@ -240,22 +247,22 @@ class UsuariosController extends Controller
                 if($request->password == null) $request->password=$usuario->password;
 
                 if($request['password']!=null) {
-                    DB::table('Users')
-                        ->where('id', $id)
+                    User::find($id)
                         ->update([
                             'name' => $request->name,
                             'email'=> $request->name,
                             'password'=> bcrypt($request['password']),
                             'estatus'=> $request->estatus,
+
                         ]);
                 }
                 else{
-                    DB::table('Users')
-                        ->where('id', $id)
+                    User::find($id)
                         ->update([
                             'name' => $request->name,
                             'email'=> $request->name,
                             'estatus'=> $request->estatus,
+
                         ]);
                 }
 
@@ -266,5 +273,57 @@ class UsuariosController extends Controller
         }
         return redirect('/usuarios')->with(['message'=>'Usuario Actualizado corectamente','tipo'=>'message']);
     }
+
+    public function editUsuarioActual()
+    {
+        return view('usuarios.edit_usuario_actual');
+    }
+    public function updateUsuarioActual(Request $request)
+    {
+
+        $this->validate($request, [
+            'name' => 'min:4|required|unique:Users,name,'.Auth::User()->id,
+        ]);
+
+
+        if ($request->password!= $request->password_confirmacion){
+            return redirect('/usuario_actual/edit')->with(['message'=>'Las contraseñas no coinciden','tipo'=>'error']);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            //obtengo le usuario relacionado al id que llego
+            $usuario = User::find(Auth::User()->id);
+
+            if($request->password == null) $request->password=$usuario->password;
+
+            if($request['password']!=null) {
+                User::find(Auth::User()->id)
+                    ->update([
+                        'name' => $request->name,
+                        'email'=> $request->name,
+                        'password'=> bcrypt($request['password']),
+                        'updated_at'=>Carbon::now()->toDateTimeString(),
+                    ]);
+            }
+            else{
+                User::find(Auth::User()->id)
+                    ->update([
+                        'name' => $request->name,
+                        'email'=> $request->name,
+                        'updated_at'=>Carbon::now()->toDateTimeString(),
+                    ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $ex){
+
+            DB::rollback();
+            return redirect('/usuario_actual/edit')->with(['message'=>'Algo salio mal','tipo'=>'error']);
+        }
+        return redirect('/home')->with(['message'=>'Usuario Actualizado corectamente','tipo'=>'message']);
+    }
+
 
 }

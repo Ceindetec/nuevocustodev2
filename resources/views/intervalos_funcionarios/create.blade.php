@@ -15,7 +15,7 @@
                 <h3 class="panel-title"> Horario Especial Agregar intervalo </h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -31,7 +31,7 @@
                                 </div>
                                 @foreach($puertasNormales as $puertaNormal)
                                     @if($puertaNormal->pivot->estatus_permiso == 1)
-                                        <div class="col-xs-4">
+                                        <div class="col-xs-6">
                                             {!! Form::checkbox($puertaNormal->id, $puertaNormal->id) !!}
                                             {!! Form::label($puertaNormal->nombre) !!}
                                         </div>
@@ -44,7 +44,7 @@
                                 </div>
                                 @foreach($puertasEspeciales as $puertaEspecial)
                                     @if($puertaEspecial->pivot->estatus_permiso == 1)
-                                        <div class="col-xs-4">
+                                        <div class="col-xs-6">
                                             {!! Form::checkbox($puertaEspecial->id, $puertaEspecial->id) !!}
                                             {!! Form::label($puertaEspecial->nombre) !!}
                                         </div>

@@ -19,7 +19,7 @@
                 <h3 class="panel-title">Lista Usuarios</h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
-                    <i class="fa fa-times"></i>
+
                 </div>
             </div>
             <div class="panel-body">
@@ -68,7 +68,7 @@
             $('#example').DataTable( {
                 "processing": true,
                 "serverSide": true,
-                "ajax": "/user-lista",
+                "ajax": "{{route('lista-usuarios')}}",
 
                 "columns":[
                     {data: 'name'},

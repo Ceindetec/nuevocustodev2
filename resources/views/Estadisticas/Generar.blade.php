@@ -12,67 +12,45 @@
         Generar Estadisticas
 @endsection
 
+
+@section('cargarcss')
+    <!-- iCheck-->
+    {!! Html::style("assets/plugins/icheck/css/_all.css") !!}
+    {!! Html::style("bootstrap-datepicker/css/bootstrap-datepicker.min.css") !!}
+@endsection
+
 @section('content')
     <div class="col-md-12">
-        <div class="panel panel-info">
+        <div class="panel panel-primary">
             <div class="panel-heading">
-                <h3 class="panel-title">GENERAR ESTADISTICAS </h3>
+                <h3 class="panel-title"> Uso de las puertas </h3>
                 <div class="actions pull-right">
                     <i class="fa fa-chevron-down"></i>
+
                 </div>
             </div>
-            <div class="panel-body">
-            {!! Form::open() !!}
-            @include('Estadisticas.forms.formulario')
-            {!! Form::button('Generar Estadistica',['class'=>'btn btn-primary','onclick'=>'dibujar()']) !!}
-            {!! Form::submit('Guardar Estadistica',['class'=>'btn btn-primary']) !!}
-            {!! Form::close() !!}
-
-
-
-            <!--inicio de charts.js-->
-
-                <canvas id = "myChart"  > </canvas>
-                <script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-
-                <script>
-                    function dibujar() {
-                        var ctx = document.getElementById('myChart').getContext('2d');
-                        var titulo = String(document.getElementById('tipo').value);
-
-
-                        var chart = new Chart(ctx, {
-                            type: 'radar',
-
-                            data: {
-                                labels: [
-                                    @forEach($funcionarios as $funcionario)
-                                        '{{$funcionario->nombre}}',
-                                    @endforeach
-                                ],
-                                datasets: [{
-                                    label: titulo,
-                                    backgroundColor: 'rgb(0, 0, 0)',
-                                    borderColor: 'rgb(255, 255, 255)',
-                                    data: [
-                                        @forEach($funcionarios as $funcionario)
-                                        {{$funcionario->hoario_normal}},
-                                        @endforeach
-                                    ],
-                                }]
-                            },
-
-                            options: {}
-                        });
-                    }
-                </script>
-
-                <!--fin de  charts.js-->
-            </div>
+                <div class="panel-body">
+                    {!!Form::open(['route'=>['estadisticas.graficas'], 'method'=>'POST'])!!}
+                        @include('Estadisticas.forms.formulario')
+                        <div class="col-md-12">
+                            <div class="panel-heading row">
+                                <div class="col-md-6">
+                                    {!!Form::submit('Consultar',['class'=>'btn btn-info btn-block btn-3d col-xs-10'])!!}
+                                </div>
+                                <div class="col-md-6">
+                                    <a class="btn btn-primary btn-block btn-3d" onclick="history.back();">Volver</a>
+                                </div>
+                            </div>
+                        </div>
+                    {!!Form::close()!!}
+                </div>
         </div>
     </div>
+    </div>
 
-
+    @if($fecha_inicio != null )
+    <canvas id="bar-chart" ></canvas>
+    @endif
 
 @endsection
 
@@ -88,18 +66,46 @@
     {!! Html::script("bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") !!}
 
 
-    <script>
 
-        $('#tipo').change(function () {
-            var opcion=$(this).val();
-            if(opcion=="cant_dias_fun")
-            {
-                $("#hora").hide();
-            }else if(opcion=="cant_ingresos_area")
-            {
-                $("#hora").show();
+    <!--inicio de charts.js-->
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+    <script>
+        new Chart(document.getElementById("bar-chart"), {
+            type: 'bar',
+            data: {
+                labels: [
+                    @foreach($puertas_usadas as $puerta)
+                        '{{ App\Puerta::find($puerta->puertas_id)->nombre }}',
+                    @endforeach
+                ],
+                datasets: [
+                    {
+                        label: "Usos: ",
+                        backgroundColor: [
+                            @foreach($puertas_usadas as $puerta)
+                            'rgba('+Math.floor(Math.random() * 255)+','+Math.floor(Math.random() * 255)+','+Math.floor(Math.random() * 255)+', 0.75)',
+                            @endforeach
+                        ],
+                        data: [
+
+                            @foreach($puertas_usadas as $puerta)
+                            {{ $puerta->total }},
+                            @endforeach
+                        ]
+                    }
+                ]
+            },
+            options: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Uso de las puertas entre '+'{{$fecha_inicio}}'+' y '+'{{$fecha_fin}}'
+                }
             }
-        })
+        });
+        <!--fin de  charts.js-->
+
         $(".datepicker").datepicker({
             format: 'yyyy-mm-dd',
             language: 'es'

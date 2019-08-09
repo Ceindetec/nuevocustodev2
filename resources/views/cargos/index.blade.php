@@ -10,11 +10,11 @@
         <div class="col-md-12">
             <div class="row panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Cargos </h3>
+                    <h3 class="panel-title">Gestión de cargos </h3>
 
                     <div class="actions pull-right">
                         <i class="fa fa-chevron-down"></i>
-                        <i class="fa fa-times"></i>
+
                     </div>
                 </div>
                 <div class="panel-body">
@@ -24,7 +24,7 @@
                             <div class="col-md-12">
                                 <div class="panel-heading row">
                                     <div class="col-md-6">
-                                        {!!link_to_route('cargos.create', 'Agregar Cargo', null,['class'=>'btn btn-info btn-block btn-3d'])!!}
+                                        {!!link_to_route('cargos.create', 'Agregar cargo', null,['class'=>'btn btn-info btn-block btn-3d'])!!}
                                     </div>
                                     <div class="col-md-6">
                                         <button class="btn btn-primary btn-block btn-3d" onclick="history.back();">Volver</button>
@@ -36,8 +36,8 @@
                                 <thead>
                                 <tr>
                                     <th>Nombre</th>
-                                    <th>estatus</th>
-                                    <th>editar</th>
+                                    <th>Estado</th>
+                                    <th>Editar</th>
                                 </tr>
                                 </thead>
                             </table>
@@ -59,7 +59,7 @@
             $('#example').DataTable( {
                 "processing": true,
                 "serverSide": true,
-                "ajax": "/cargos_lista",
+                "ajax": "{{route('lista-cargos')}}",
 
                 "columns":[
                     {data: 'nombre'},

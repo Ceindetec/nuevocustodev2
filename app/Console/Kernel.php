@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -24,6 +25,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+
+        $schedule->call(function () {
+            DB::table('Licencias')->delete();
+            // Aquí va tu lógica
+        })->everyMinute();
+
+        //$schedule->command('actualizar:licencias')->everyMinute();
         // $schedule->command('inspire')
         //          ->hourly();
     }
@@ -37,4 +45,7 @@ class Kernel extends ConsoleKernel
     {
         require base_path('routes/console.php');
     }
+
+
+    
 }
